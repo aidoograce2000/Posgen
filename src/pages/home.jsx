@@ -22,53 +22,123 @@ import { useNavigate } from "react-router-dom";
 
 
 
+
 /* ============================== HERO ============================== */
 // Local MP4 carousel (cross-fade)
-function VideoCarousel({ sources, duration = 9000 }) {
+// function VideoCarousel({ sources, duration = 9000 }) {
+//   const [idx, setIdx] = useState(0);
+//   const vidsRef = useRef([]);
+
+//   useEffect(() => {
+//     const t = setInterval(() => setIdx((p) => (p + 1) % sources.length), duration);
+//     return () => clearInterval(t);
+//   }, [sources.length, duration]);
+
+//   useEffect(() => {
+//     vidsRef.current.forEach((v, i) => {
+//       if (!v) return;
+//       if (i === idx) {
+//         try { v.currentTime = 0; v.play(); } catch {}
+//       } else {
+//         v.pause();
+//       }
+//     });
+//   }, [idx]);
+
+//   return (
+//     <div className="absolute inset-0">
+//       {sources.map((src, i) => (
+//         <video
+//           key={src}
+//           ref={(el) => (vidsRef.current[i] = el)}
+//           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-out ${i === idx ? "opacity-100" : "opacity-0"}`}
+//           preload="auto"
+//           autoPlay
+//           muted
+//           playsInline
+//           // webkit-playsinline helps older Safari
+//           // @ts-ignore
+//           webkit-playsinline="true"
+//           loop={false}
+//           onEnded={() => setIdx((p) => (p + 1) % sources.length)}
+//         >
+//           <source src={src} type="video/mp4" />
+//         </video>
+//       ))}
+//       {/* veil for readability */}
+//       <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#0A0E12]/70 via-[#0A0E12]/30 to-[#0A0E12]/80" />
+//     </div>
+//   );
+// }
+
+// import { useEffect, useRef, useState } from "react";
+
+ function VideoCarousel({ sources, duration = 9000 }) {
   const [idx, setIdx] = useState(0);
   const vidsRef = useRef([]);
 
+  /* Auto-advance timer */
   useEffect(() => {
-    const t = setInterval(() => setIdx((p) => (p + 1) % sources.length), duration);
-    return () => clearInterval(t);
+    if (sources.length <= 1) return;
+    const timer = setInterval(
+      () => setIdx((prev) => (prev + 1) % sources.length),
+      duration
+    );
+    return () => clearInterval(timer);
   }, [sources.length, duration]);
 
+  /* Play active video, pause others */
   useEffect(() => {
-    vidsRef.current.forEach((v, i) => {
-      if (!v) return;
+    vidsRef.current.forEach((video, i) => {
+      if (!video) return;
+
       if (i === idx) {
-        try { v.currentTime = 0; v.play(); } catch {}
+        try {
+          video.currentTime = 0;
+          video.play();
+        } catch (e) {
+          console.warn("Video autoplay blocked", e);
+        }
       } else {
-        v.pause();
+        video.pause();
       }
     });
   }, [idx]);
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 overflow-hidden bg-black">
       {sources.map((src, i) => (
         <video
           key={src}
           ref={(el) => (vidsRef.current[i] = el)}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-out ${i === idx ? "opacity-100" : "opacity-0"}`}
           preload="auto"
-          autoPlay
           muted
           playsInline
-          // webkit-playsinline helps older Safari
-          // @ts-ignore
-          webkit-playsinline="true"
+          autoPlay
           loop={false}
           onEnded={() => setIdx((p) => (p + 1) % sources.length)}
+          className={`
+            absolute inset-0
+            w-full h-full
+            object-contain md:object-cover
+            object-top
+            transition-opacity duration-700 ease-out
+            ${i === idx ? "opacity-100 z-0" : "opacity-0"}
+          `}
+          // Safari support
+          // @ts-ignore
+          webkit-playsinline="true"
         >
           <source src={src} type="video/mp4" />
         </video>
       ))}
-      {/* veil for readability */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#0A0E12]/70 via-[#0A0E12]/30 to-[#0A0E12]/80" />
+
+      {/* Overlay for text readability (lighter, face-safe) */}
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/40 via-black/10 to-black/50" />
     </div>
   );
 }
+
 
 
 function Hero() {
@@ -78,10 +148,10 @@ function Hero() {
       <VideoCarousel
         sources={[
           "/videos/hero-1.mp4",
-          "/videos/hero-2.mp4",
+          // "/videos/hero-2.mp4",
           // "/videos/hero-3.mp4",
         ]}
-        duration={18000} // ms per video before auto-advance
+        // duration={18000} // ms per video before auto-advance
       />
 
       {/* headline */}
@@ -715,15 +785,17 @@ function ExperienceSection() {
           ))}
         </div>
 
-        {/* Optional Image */}
-        <div className="mt-16 rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.35)]">
-          <img
-            src="public/videos/black.jpg"
-            alt="Luxury travel experience"
-            className="w-full h-[300px] md:h-[500px] object-cover"
-            loading="lazy"
-          />
-        </div>
+        {/* Image */}
+       <div className="mt-16 rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.35)] aspect-[8/5]">
+  <img
+    src="/images/gallery27.jpeg"
+    alt="Luxury travel experience"
+    className="w-full h-full object-cover object-top"
+  />
+</div>
+
+
+
       </div>
     </section>
   );
@@ -734,7 +806,7 @@ function ExperienceSection() {
 /* ============================ DEALS SECTION =========================== */
 // Replace your existing DealsSection + DealCard with this code
 // import { useEffect, useRef, useState } from "react";
-// import { Link } from "react-router-dom";
+
 
 /* small helpers (matching your data shape) */
 
@@ -1019,7 +1091,7 @@ function WhyChoosePostgen() {
         {/* Left side — image */}
         <div className="relative overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.35)] hidden lg:block">
           <img
-            src="public/videos/images.png"
+            src="public/images/gallery.jpeg"
             alt="Traveler luxury experience"
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
             loading="lazy"
